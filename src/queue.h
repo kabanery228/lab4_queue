@@ -1,56 +1,103 @@
 #define QUEUE_H
-
-template <class T>
-class Node {
-	T val;
-public:
-	Node* next = nullptr;
-	Node(T val_) :val(val_) {};
-	void insert<T>(T val_) {
-		if (next == nullptr) {
-			next = new Node<T>(val_);
-		}
-		else {
-			Node* tmp = new Node(val_);
-			tmp->next = next;
-			next = tmp;
-		}
-	}
-	Node* get_next() {
-		return next;
-	}
-	T get_val() const {
-		return val;
-	}
-	~Node() {
-		delete next;
-	}
-};
+#include <vector>
 template<class T>
-class Queue {
-
-	Node<T>* first = nullptr;
-	Node<T>* last = nullptr;
-	size_t queue_size;
+class TForwardList {
+	template <class T>
+	struct Node{
+		T val;
+		Node<T>* next;
+	};
+	Node<T>* first;
+	Node<T>* last;
+	size_t sz = 0;
 public:
-	Queue() : queue_size(0) {};
-	void push(T val) {
-		if (first == nullptr) {
-			first = new Node(val);
+	TForwardList():sz(0),first(nullptr),last(nullptr){}
+	TForwardList(const std::vector<T>& v) {
+		Node<T>* newElem = new Node<T>{ v[v.size() - 1],nullptr };
+		sz++;
+		first = last = newElem;
+		for (int i = v.size() - 2;i >= 0;--i) {
+			newElem = new Node<T>{ v[i],first };
+			first = newElem;
+			sz++;
 		}
-		else if (last == nullptr) { first->insert<T>(val); last = first->get_next(); }
-		else last->insert<T>(val);
 	}
-	T top() const {
-		if (first != nullptr) return first->get_val();
-		else throw "queue is empty";
+	TForwardList(const TForwardList<T>& other):sz(other.sz) {
+		//if (sz) clear();
+		Node<T>* newElem = new Node<T>{ other.first->val,other.first->next };
+		first = last = newElem;
+		while (newElem != nullptr) {
+			auto* tmp = new Node<T>{ newElem->val, newElem->next }
+			last->next = tmp;
+			last = tmp;
+			newElem = newElem->next;
+		}
+
 	}
-	void pop() {
-		Node<T>* tmp = first->get_next();
+	TForwardList<T>& operator=(const TForwardList<T>& other) {
+		if (*this != other) 
+			*this = TForwardList(other);
+		return *this;
+	}
+	T getFirst() {
+		return first->val;;
+	}
+	
+	T getLast() {
+		return last->val;
+	}
+	
+	void clear() {
+		if (sz > 0) {
+			Node<T>* nextElem = first;
+			Node<T>* delElem;
+			while (nextElem != nullptr) {
+				delElem = nextElem;
+				nextElem = nextElem->next;
+				delete delElem;
+			}
+		}
+		sz = 0;
+	}
+	~TForwardList() {
+		clear();
+	}
+	void pushBack(const T& val) {
+		if (last != nullptr) {
+			last->next = new Node<T>{ val, nullptr };
+			last = last->next;
+		}
+		else { last = new Node<T>{ val, nullptr };first = last; };
+		sz++;
+	}
+	void pushFront(const T& val) {
+		first = new Node<T>{ val,first };
+		if (!sz) last = first;
+		sz++;
+
+	}
+	void eraseFront() {
+		auto* tmp = first->next;
 		delete first;
 		first = tmp;
+		sz--;
+		if (sz == 1) first = last;
 	}
-	~Queue() {
-		delete first, last;
+	void eraseBack() {
+		auto* tmp = first;
+		delete last;
+		while (tmp->next != nullptr) tmp = tmp->next;
+		last = tmp;
+		if (sz == 1) first = last;
 	}
 };
+
+//template <class T>
+//class Queue{
+//	TForwardList<T> queue;
+//	size_t sz;
+//public:
+//	Queue() {
+//		TForwardList()
+//	};
+//};
